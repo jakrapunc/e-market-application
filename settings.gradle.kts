@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "E Market"
 include(":app")
 include(":core:network")
+include(":core:base")
