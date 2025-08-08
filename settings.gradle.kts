@@ -23,3 +23,4 @@ rootProject.name = "E Market"
 include(":app")
 include(":core:network")
 include(":core:base")
+include(":shares:stores-service")
