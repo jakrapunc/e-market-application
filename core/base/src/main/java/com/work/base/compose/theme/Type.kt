@@ -1,4 +1,4 @@
-package com.work.emarket.ui.theme
+package com.work.base.compose.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
