@@ -1,5 +1,6 @@
 package com.work.base.compose.component
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.work.base.compose.theme.EMarketTheme
@@ -27,10 +29,11 @@ fun NumberInput(
     modifier: Modifier = Modifier,
     number: String = "1",
     maxValue: Int = 99,
+    fontSize: TextUnit = 12.sp,
     onChange: (String) -> Unit = {},
 ) {
     OutlinedTextField(
-        modifier = modifier.width(width = 60.dp),
+        modifier = modifier,
         value = number,
         onValueChange = {
             if (it.isEmpty()) {
@@ -53,7 +56,7 @@ fun NumberInput(
         ),
         shape = RoundedCornerShape(10.dp),
         textStyle = TextStyle(
-            fontSize = 24.sp,
+            fontSize = fontSize,
             textAlign = TextAlign.Center
         ),
         keyboardOptions = KeyboardOptions(
@@ -69,6 +72,7 @@ fun NumberInputPreview() {
     EMarketTheme {
         var number by remember { mutableStateOf("1") }
         NumberInput(
+            modifier = Modifier.width(60.dp),
             number = number,
             onChange = {
                 number = it

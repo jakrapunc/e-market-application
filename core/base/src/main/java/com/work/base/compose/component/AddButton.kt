@@ -3,6 +3,7 @@ package com.work.base.compose.component
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -35,18 +36,18 @@ fun AddButton(
     val scale = remember { Animatable(1f) }
     var triggerAnimation by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(triggerAnimation) {
-        if (triggerAnimation > 0) {
-            scale.animateTo(
-                targetValue = animateScaleSize,
-                animationSpec = spring(stiffness = stiffness)
-            )
-            scale.animateTo(
-                targetValue = 1f,
-                animationSpec = spring(stiffness = stiffness / 2)
-            )
-        }
-    }
+//    LaunchedEffect(triggerAnimation) {
+//        if (triggerAnimation > 0) {
+//            scale.animateTo(
+//                targetValue = animateScaleSize,
+//                animationSpec = spring(stiffness = stiffness)
+//            )
+//            scale.animateTo(
+//                targetValue = 1f,
+//                animationSpec = spring(stiffness = stiffness / 2)
+//            )
+//        }
+//    }
 
     IconButton(
         onClick = {
@@ -54,7 +55,9 @@ fun AddButton(
             onClick()
         },
         modifier = Modifier
-            .scale(scale.value),
+            .size(buttonSize),
+//            .scale(scale.value),
+        interactionSource = MutableInteractionSource(),
     ) {
         Icon(
             modifier = Modifier.size(buttonSize)
