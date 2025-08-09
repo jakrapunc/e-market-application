@@ -1,6 +1,7 @@
 package com.work.base.compose.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,7 @@ fun BackButton(
     Row(
         modifier = Modifier.size(width = 80.dp, height = 32.dp)
             .background(color = MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(16.dp))
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(16.dp))
             .clickable {
                 onClick()
             },
@@ -34,10 +36,12 @@ fun BackButton(
             modifier = Modifier.rotate(90f),
             imageVector = Icons.Filled.KeyboardArrowDown,
             contentDescription = null,
+            tint = MaterialTheme.colorScheme.tertiary
         )
         Text(
             text = "Go Back",
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary
         )
     }
 }
