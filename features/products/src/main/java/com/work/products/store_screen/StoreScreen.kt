@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Green40
 import com.work.base.compose.theme.Grey40
-import com.work.base.compose.theme.Red
 import com.work.base.compose.theme.White
 import com.work.design.R
 import com.work.products.component.MenuCard
@@ -234,20 +232,12 @@ fun StoreScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillParentMaxHeight()
-//                        .background(Grey40)
                         .padding(horizontal = 20.dp)
                         .nestedScroll(nestedScrollConnection),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-//                    contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
                     items(2) {
-//                        Box(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(200.dp)
-//                                .background(Red)
-//                        )
                         MenuCard()
                     }
 

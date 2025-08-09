@@ -29,35 +29,15 @@ import com.work.base.compose.theme.Orange40
 @Composable
 fun AddButton(
     buttonSize: Dp = 36.dp,
-    animateScaleSize: Float = 1.2f,
-    stiffness: Float = 600f,
     onClick: () -> Unit = {}
 ) {
-    val scale = remember { Animatable(1f) }
-    var triggerAnimation by remember { mutableIntStateOf(0) }
-
-//    LaunchedEffect(triggerAnimation) {
-//        if (triggerAnimation > 0) {
-//            scale.animateTo(
-//                targetValue = animateScaleSize,
-//                animationSpec = spring(stiffness = stiffness)
-//            )
-//            scale.animateTo(
-//                targetValue = 1f,
-//                animationSpec = spring(stiffness = stiffness / 2)
-//            )
-//        }
-//    }
-
     IconButton(
         onClick = {
-            triggerAnimation++
             onClick()
         },
         modifier = Modifier
             .size(buttonSize),
-//            .scale(scale.value),
-        interactionSource = MutableInteractionSource(),
+        interactionSource = remember { MutableInteractionSource() },
     ) {
         Icon(
             modifier = Modifier.size(buttonSize)
