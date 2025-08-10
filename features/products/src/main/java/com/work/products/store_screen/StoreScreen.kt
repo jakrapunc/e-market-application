@@ -240,7 +240,6 @@ fun StoreScreen() {
                     items(2) {
                         MenuCard()
                     }
-
                 }
             }
         }

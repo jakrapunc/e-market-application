@@ -16,21 +16,32 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.work.base.compose.component.AddButton
-import com.work.base.compose.component.NumberInput
-import com.work.base.compose.component.SubtractButton
+import coil.compose.AsyncImage
+import com.work.base.compose.component.ItemCountLayout
 import com.work.base.compose.theme.EMarketTheme
-import com.work.base.compose.theme.Orange40
 import com.work.base.compose.theme.White
 
 @Composable
-fun MenuCard() {
+fun MenuCard(
+    itemCount: Int = 0,
+    price: String = "0",
+    menuName: String = "",
+    imageUrl: String = "",
+    onPlusClick: () -> Unit = {},
+    onMinusClick: () -> Unit = {},
+    onValueChange: (String) -> Unit = {}
+) {
     Card(
         modifier = Modifier.fillMaxWidth()
             .wrapContentHeight(),
@@ -44,15 +55,19 @@ fun MenuCard() {
                 .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(
+            AsyncImage(
+                model = imageUrl,
                 modifier = Modifier.fillMaxWidth()
-                    .height(150.dp)
-                .background(MaterialTheme.colorScheme.error, shape = RoundedCornerShape(8.dp))
+                    .height(150.dp),
+                contentDescription = "Menu Image",
+                placeholder = painterResource(id = com.work.design.R.drawable.placeholder)
             )
+
             Spacer(modifier = Modifier.size(16.dp))
+
             Text(
                 modifier = Modifier.fillMaxWidth(),
-                text = "Honey lime",
+                text = menuName,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.tertiary
             )
@@ -65,25 +80,16 @@ fun MenuCard() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "2,000",
+                    text = price,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.tertiary
                 )
-                Row(
-                    modifier = Modifier.background(
-                        color = Orange40,
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SubtractButton(buttonSize = 24.dp)
-                    NumberInput(
-                        modifier = Modifier.size(width = 24.dp, height = 24.dp),
-                        fontSize = 14.sp
-                    )
-                    AddButton(buttonSize = 24.dp)
-                }
+                ItemCountLayout(
+                    value = itemCount,
+                    onPlusClick = onPlusClick,
+                    onMinusClick = onMinusClick,
+                    onValueChange = onValueChange
+                )
             }
         }
     }
@@ -93,6 +99,24 @@ fun MenuCard() {
 @Composable
 fun MenuCardPreview() {
     EMarketTheme {
-        MenuCard()
+        var currentValue by remember { mutableIntStateOf(0) }
+        MenuCard(
+            itemCount = currentValue,
+            onValueChange = {
+                if (it.isEmpty()) {
+                    currentValue = 0
+                    return@MenuCard
+                }
+                it.toIntOrNull()?.let { num -> currentValue = num }
+            },
+            onPlusClick = {
+                currentValue++
+            },
+            onMinusClick = {
+                if (currentValue >= 1) {
+                    currentValue--
+                }
+            }
+        )
     }
 }
