@@ -9,14 +9,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.work.base.compose.theme.EMarketTheme
 
 @Composable
 fun PrimaryButton(
-    text: String,
     modifier: Modifier = Modifier,
+    text: String,
     onClick: () -> Unit = {}
 ) {
     Button(
@@ -26,11 +27,12 @@ fun PrimaryButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 28.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.displaySmall
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
         )
     }
 }

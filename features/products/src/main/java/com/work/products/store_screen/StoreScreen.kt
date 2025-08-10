@@ -1,5 +1,6 @@
 package com.work.products.store_screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -49,19 +51,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.work.base.compose.component.BasketButton
 import com.work.base.compose.theme.EMarketTheme
-import com.work.base.compose.theme.Green40
 import com.work.base.compose.theme.Grey40
 import com.work.base.compose.theme.White
+import com.work.base.extension.toPriceString
 import com.work.design.R
 import com.work.products.component.MenuCard
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+
+@Composable
+fun StoreScreen(
+    viewModel: StoreScreenViewModel = koinViewModel()
+) {
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+    StoreScreen(
+        uiState = uiState.value,
+        onEvent = viewModel::onEvent
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StoreScreen() {
+fun StoreScreen(
+    uiState: StoreScreenViewModel.UIState,
+    onEvent: (StoreScreenViewModel.UIEvent) -> Unit,
+    onNavigateToBasket: () -> Unit = {},
+) {
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var headerAlpha by remember { mutableFloatStateOf(0f) }
@@ -81,12 +103,16 @@ fun StoreScreen() {
 
     LaunchedEffect(key1 = Unit) {
         snapshotFlow {
-            if (lazyListState.firstVisibleItemIndex == 0) {
-                0f
-            } else if (lazyListState.firstVisibleItemIndex == 1) {
-                lazyListState.firstVisibleItemScrollOffset.toFloat() / lazyListState.layoutInfo.visibleItemsInfo[1].size
-            } else {
-                1f
+            when (lazyListState.firstVisibleItemIndex) {
+                0 -> {
+                    0f
+                }
+                1 -> {
+                    lazyListState.firstVisibleItemScrollOffset.toFloat() / lazyListState.layoutInfo.visibleItemsInfo[1].size
+                }
+                else -> {
+                    1f
+                }
             }
         }.onEach {
             headerAlpha = it
@@ -127,6 +153,24 @@ fun StoreScreen() {
                 ),
             )
         },
+        bottomBar = {
+            AnimatedVisibility(
+                uiState.totalItem > 0,
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(White)
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    BasketButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        itemCount = uiState.totalItem,
+                        totalPrice = uiState.totalPrice,
+                        onClick = onNavigateToBasket
+                    )
+                }
+            }
+        },
         containerColor = Color.Transparent
     ) { paddingValues ->
         LazyColumn(
@@ -144,7 +188,14 @@ fun StoreScreen() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
-                            .background(Green40)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    AsyncImage(
+                        model = "",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentDescription = "",
                     )
                     Spacer(
                         modifier = Modifier
@@ -165,7 +216,7 @@ fun StoreScreen() {
                         .padding(horizontal = 20.dp)
                 ) {
                     Text(
-                        text = "The Coffee Shop",
+                        text = uiState.storeInfo?.name ?: "",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
@@ -183,7 +234,7 @@ fun StoreScreen() {
                         )
                         Text(
                             modifier = Modifier.padding(start = 2.dp),
-                            text = "4.8",
+                            text = uiState.storeInfo?.rating?.toString() ?: "",
                             color = MaterialTheme.colorScheme.tertiary,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -196,7 +247,7 @@ fun StoreScreen() {
                         )
                         Text(
                             modifier = Modifier.padding(start = 4.dp),
-                            text = "15.00 - 20.00",
+                            text = "${uiState.storeInfo?.openingTime} - ${uiState.storeInfo?.closingTime}",
                             color = MaterialTheme.colorScheme.tertiary,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -237,8 +288,22 @@ fun StoreScreen() {
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(2) {
-                        MenuCard()
+                    items(uiState.products) { product ->
+                        MenuCard(
+                            itemCount = uiState.orderList[product] ?: 0,
+                            price = product.price.toPriceString(),
+                            menuName = product.name,
+                            imageUrl = product.imageUrl,
+                            onPlusClick = {
+                                onEvent(StoreScreenViewModel.UIEvent.AddItem(product))
+                            },
+                            onMinusClick = {
+                                onEvent(StoreScreenViewModel.UIEvent.RemoveItem(product))
+                            },
+                            onValueChange = {
+                                onEvent(StoreScreenViewModel.UIEvent.UpdateItem(product, it.toIntOrNull() ?: 0))
+                            }
+                        )
                     }
                 }
             }
@@ -250,6 +315,9 @@ fun StoreScreen() {
 @Composable
 fun StoreScreenPreview() {
     EMarketTheme {
-        StoreScreen()
+        StoreScreen(
+            uiState = StoreScreenViewModel.UIState(),
+            onEvent = {},
+        )
     }
 }
