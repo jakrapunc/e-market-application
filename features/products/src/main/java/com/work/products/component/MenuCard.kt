@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,7 @@ fun MenuCard(
                 modifier = Modifier.fillMaxWidth()
                     .height(150.dp),
                 contentDescription = "Menu Image",
+                contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = com.work.design.R.drawable.placeholder)
             )
 

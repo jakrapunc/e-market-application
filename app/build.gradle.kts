@@ -43,6 +43,7 @@ android {
 dependencies {
     implementation(project(":core:base"))
     implementation(project(":core:network"))
+    implementation(project(":features:products"))
     implementation(project(":shares:stores-service"))
 
     testImplementation(libs.junit)
