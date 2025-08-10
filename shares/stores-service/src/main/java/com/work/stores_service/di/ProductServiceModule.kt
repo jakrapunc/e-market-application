@@ -11,6 +11,7 @@ import com.work.stores_service.data.service.repository.local.BasketDao
 import com.work.stores_service.data.service.repository.local.BasketDatabase
 import com.work.stores_service.data.service.repository.remote.IProductRemote
 import com.work.stores_service.data.service.repository.remote.ProductRemote
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val productServiceModule = module {
@@ -20,7 +21,6 @@ val productServiceModule = module {
             context,
             BasketDatabase::class.java,
             BASKET_DATABASE,
-
         ).build()
     }
 
@@ -29,22 +29,22 @@ val productServiceModule = module {
     }
 
     single {
-        provideBasketDatabase(get())
+        provideBasketDatabase(androidContext())
     }
 
     single {
         provideBasketDao(get())
     }
 
-    factory<IBasketRepository> {
+    single<IBasketRepository> {
         BasketRepository(get())
     }
 
-    factory<IProductRemote> {
+    single<IProductRemote> {
         ProductRemote(get())
     }
 
-    factory<IProductRepository> {
+    single<IProductRepository> {
         ProductRepository(get())
     }
 }

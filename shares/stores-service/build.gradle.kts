@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.ksp)
 }
 
 android {
@@ -34,6 +35,8 @@ android {
 
 dependencies {
     implementation(project(":core:network"))
+
+    ksp(libs.room.ksp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -10,6 +10,7 @@ val productsModule = module {
     viewModel {
         StoreScreenViewModel(
             get(),
+            get(),
             get(named("io")),
         )
     }

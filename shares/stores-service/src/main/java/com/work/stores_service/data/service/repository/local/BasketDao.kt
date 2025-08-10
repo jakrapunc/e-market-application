@@ -15,7 +15,7 @@ interface BasketDao {
     fun getAllBasketItems(): Flow<List<BasketItemEntity>>
 
     @Query("SELECT * FROM basket_item WHERE productName = :productName")
-    fun getBasketItemByName(productName: String): Flow<BasketItemEntity>
+    fun getBasketItemByName(productName: String): Flow<BasketItemEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(basketItemEntity: BasketItemEntity)

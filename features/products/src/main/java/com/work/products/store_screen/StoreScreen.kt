@@ -290,7 +290,7 @@ fun StoreScreen(
                 ) {
                     items(uiState.products) { product ->
                         MenuCard(
-                            itemCount = uiState.orderList[product] ?: 0,
+                            itemCount = uiState.orderList.find { it.productName == product.name }?.quantity ?: 0,
                             price = product.price.toPriceString(),
                             menuName = product.name,
                             imageUrl = product.imageUrl,

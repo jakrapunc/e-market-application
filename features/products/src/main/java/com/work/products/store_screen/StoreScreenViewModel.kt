@@ -6,6 +6,8 @@ import com.work.base.extension.formatDateTime
 import com.work.base.extension.toPriceString
 import com.work.stores_service.data.model.ProductData
 import com.work.stores_service.data.model.StoreInfoData
+import com.work.stores_service.data.model.entity.BasketItemEntity
+import com.work.stores_service.data.service.repository.IBasketRepository
 import com.work.stores_service.data.service.repository.IProductRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -20,6 +22,7 @@ import kotlinx.coroutines.withContext
 
 class StoreScreenViewModel(
     private val productRepository: IProductRepository,
+    private val basketRepository: IBasketRepository,
     private val coroutineDispatcher: CoroutineDispatcher
 ): ViewModel() {
     private val _storeInfo = MutableStateFlow<StoreInfoData?>(null)
@@ -28,13 +31,19 @@ class StoreScreenViewModel(
     private val _error = MutableStateFlow<String?>(null)
     private val _orderList = MutableStateFlow<Map<ProductData, Int>>(emptyMap())
 
+    private val _localBasket = basketRepository.getCurrentBasket().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = emptyList()
+    )
+
     val uiState = combine(
         _storeInfo,
         _productList,
         _isLoading,
         _error,
-        _orderList
-    ) { store, products, isLoading, error, orderList ->
+        _localBasket
+    ) { store, products, isLoading, error, localBasket ->
         UIState(
             storeInfo = store?.copy(
                 openingTime = store.openingTime.formatDateTime() ?: "0.00",
@@ -43,9 +52,9 @@ class StoreScreenViewModel(
             products = products,
             isLoading = isLoading,
             error = error,
-            orderList = orderList,
-            totalItem = orderList.values.sum(),
-            totalPrice = sumPrice(orderList)
+            orderList = localBasket,
+            totalItem = localBasket.sumOf { it.quantity },
+            totalPrice = sumPrice(localBasket)
         )
     }.stateIn(
         scope = viewModelScope,
@@ -78,39 +87,44 @@ class StoreScreenViewModel(
     fun onEvent(event: UIEvent) {
         when (event) {
             is UIEvent.AddItem -> {
-                _orderList.update {
-                    it.toMutableMap().apply {
-                        if ((this[event.data] ?: 0) < 99) {
-                            this[event.data] = (this[event.data] ?: 0) + 1
-                        }
-                    }
+                viewModelScope.launch {
+                    basketRepository.addToBasket(event.data, 1)
                 }
+//                _orderList.update {
+//                    it.toMutableMap().apply {
+//                        if ((this[event.data] ?: 0) < 99) {
+//                            this[event.data] = (this[event.data] ?: 0) + 1
+//                        }
+//                    }
+//                }
             }
             is UIEvent.RemoveItem -> {
-                _orderList.update {
-                    it.toMutableMap().apply {
-                        if (this[event.data] != null && (this[event.data] ?: 0) > 0) {
-                            this[event.data] = (this[event.data] ?: 0) - 1
-                        }
-                    }
+                viewModelScope.launch {
+                    basketRepository.removeBasketItem(event.data.name)
                 }
+//                _orderList.update {
+//                    it.toMutableMap().apply {
+//                        if (this[event.data] != null && (this[event.data] ?: 0) > 0) {
+//                            this[event.data] = (this[event.data] ?: 0) - 1
+//                        }
+//                    }
+//                }
             }
             is UIEvent.UpdateItem -> {
-                _orderList.update {
-                    it.toMutableMap().apply {
-                        this[event.data] = event.count
-                    }
+                viewModelScope.launch {
+                    basketRepository.updateBasketItem(event.data, event.count)
                 }
+//                _orderList.update {
+//                    it.toMutableMap().apply {
+//                        this[event.data] = event.count
+//                    }
+//                }
             }
         }
     }
 
-    private fun sumPrice(orderList: Map<ProductData, Int>): String {
-        var sum = 0
-        orderList.forEach { (product, count) ->
-            sum += product.price * count
-        }
-        return sum.toPriceString()
+    private fun sumPrice(orderList: List<BasketItemEntity>): String {
+        return orderList.sumOf { it.quantity * it.price }.toPriceString()
     }
 
     sealed interface UIEvent {
@@ -122,7 +136,7 @@ class StoreScreenViewModel(
     data class UIState(
         val storeInfo: StoreInfoData? = null,
         val products: List<ProductData> = emptyList(),
-        val orderList: Map<ProductData, Int> = emptyMap(),
+        val orderList: List<BasketItemEntity> = emptyList(),
         val totalItem: Int = 0,
         val totalPrice: String = "",
         val isLoading: Boolean = false,

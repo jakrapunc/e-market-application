@@ -33,6 +33,9 @@ class BasketRepository(
 
         existingItem?.let {
             val newQuantity = it.quantity + quantity
+            if (newQuantity > 99) {
+                return
+            }
             basketDao.update(
                 BasketItemEntity(
                     productName = productData.name,
