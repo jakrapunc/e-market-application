@@ -28,8 +28,8 @@ fun AddressInput(
         onValueChange = {
             onChange(it)
         },
-        minLines = 2,
-        maxLines = 2,
+        minLines = 3,
+        maxLines = 3,
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Grey40,
             unfocusedContainerColor = Grey40,
@@ -38,13 +38,13 @@ fun AddressInput(
         ),
         shape = RoundedCornerShape(10.dp),
         textStyle = TextStyle(
-            fontSize = 24.sp,
+            fontSize = 16.sp,
         ),
         placeholder = {
             Text(
                 text = "Address",
                 style = TextStyle(
-                    fontSize = 24.sp,
+                    fontSize = 16.sp,
                 ),
                 color = Grey80
             )

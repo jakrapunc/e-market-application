@@ -30,7 +30,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,9 +46,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.work.base.compose.component.AddressInput
 import com.work.base.compose.component.PrimaryButton
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Grey40
+import com.work.base.compose.theme.White
 import com.work.base.extension.toPriceString
 import com.work.stores_service.data.model.entity.BasketItemEntity
 import kotlinx.coroutines.launch
@@ -54,14 +60,14 @@ import org.koin.androidx.compose.koinViewModel
 fun BasketScreen(
     viewModel: BasketScreenViewModel = koinViewModel(),
     onBack: () -> Unit = {},
-    onCheckout: () -> Unit = {}
+    onSubmit: (String) -> Unit = {}
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
     BasketScreen(
         uiState = uiState.value,
         onBack = onBack,
-        onCheckout = onCheckout
+        onSubmit = onSubmit
     )
 }
 
@@ -70,7 +76,7 @@ fun BasketScreen(
 fun BasketScreen(
     uiState: BasketScreenViewModel.UIState,
     onBack: () -> Unit = {},
-    onCheckout: () -> Unit = {}
+    onSubmit: (String) -> Unit = {}
 ) {
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -112,34 +118,19 @@ fun BasketScreen(
         },
         scaffoldState = scaffoldState,
         sheetContent = {
-            // Content of your bottom sheet
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp) // Adjust height as needed or use wrapContentHeight
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("This is the Bottom Sheet Content")
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Button(onClick = {
-                        coroutineScope.launch {
-                            bottomSheetState.hide()
-                        }
-                    }) {
-                        Text("Close Bottom Sheet")
-                    }
-                }
-            }
+            BottomSheetContent(
+                onSubmit = onSubmit
+            )
         },
         sheetPeekHeight = 56.dp,
         sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetContainerColor = White,
         sheetDragHandle = { BottomSheetDefaults.DragHandle() },
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.secondary)
                 .padding(top = padding.calculateTopPadding())
         ) {
             LazyColumn(
@@ -160,7 +151,6 @@ fun BasketScreen(
                     coroutineScope.launch {
                         bottomSheetState.show()
                     }
-                    onCheckout()
                 }
             )
         }
@@ -235,7 +225,6 @@ fun BasketScreenBottomBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-//            .background(Red)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -257,6 +246,62 @@ fun BasketScreenBottomBar(
             text = "Checkout",
             onClick = onCheckout
         )
+    }
+}
+
+@Composable
+fun BottomSheetContent(
+    onSubmit: (String) -> Unit = {}
+) {
+    var addressState by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .background(White)
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 20.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Delivery Address",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 18.sp
+                ),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            AddressInput(
+                modifier = Modifier.fillMaxWidth(),
+                address = addressState,
+                onChange = {
+                    addressState = it
+                }
+            )
+        }
+
+        PrimaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            text = "Checkout",
+            onClick = {
+                onSubmit(addressState)
+            }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BottomSheetContentPreview() {
+    EMarketTheme {
+        BottomSheetContent()
     }
 }
 

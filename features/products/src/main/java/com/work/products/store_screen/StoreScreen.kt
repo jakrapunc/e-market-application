@@ -126,24 +126,11 @@ fun StoreScreen(
                 title = {
                     Text(
                         modifier = Modifier.alpha(headerAlpha),
-                        text = "The Coffee Shop",
+                        text = uiState.storeInfo?.name ?: "",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        modifier = Modifier.alpha(headerAlpha),
-                        onClick = {}
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = null,
-                            modifier = Modifier.size(36.dp),
-                            tint = MaterialTheme.colorScheme.tertiary,
-                        )
-                    }
                 },
                 windowInsets = TopAppBarDefaults.windowInsets,
                 colors = TopAppBarDefaults.topAppBarColors(
