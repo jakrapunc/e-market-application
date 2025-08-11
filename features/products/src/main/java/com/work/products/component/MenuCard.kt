@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -58,7 +59,8 @@ fun MenuCard(
             AsyncImage(
                 model = imageUrl,
                 modifier = Modifier.fillMaxWidth()
-                    .height(150.dp),
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(8.dp)),
                 contentDescription = "Menu Image",
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = com.work.design.R.drawable.placeholder)
