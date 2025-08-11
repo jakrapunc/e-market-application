@@ -2,6 +2,7 @@ package com.work.products.basket_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,15 +17,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,9 +45,9 @@ import coil.compose.AsyncImage
 import com.work.base.compose.component.PrimaryButton
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Grey40
-import com.work.base.compose.theme.Red
 import com.work.base.extension.toPriceString
 import com.work.stores_service.data.model.entity.BasketItemEntity
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -66,7 +72,15 @@ fun BasketScreen(
     onBack: () -> Unit = {},
     onCheckout: () -> Unit = {}
 ) {
-    Scaffold(
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = bottomSheetState,
+    )
+    val coroutineScope = rememberCoroutineScope()
+
+    BottomSheetScaffold (
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
@@ -96,22 +110,59 @@ fun BasketScreen(
                 ),
             )
         },
-        bottomBar = {
-            BasketScreenBottomBar(
-                uiState = uiState,
-                onCheckout = onCheckout
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier.padding(padding)
-                .fillMaxSize()
-        ) {
-            items(uiState.orderList) { order ->
-                BasketScreenItem(
-                    item = order,
-                )
+        scaffoldState = scaffoldState,
+        sheetContent = {
+            // Content of your bottom sheet
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp) // Adjust height as needed or use wrapContentHeight
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("This is the Bottom Sheet Content")
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            bottomSheetState.hide()
+                        }
+                    }) {
+                        Text("Close Bottom Sheet")
+                    }
+                }
             }
+        },
+        sheetPeekHeight = 56.dp,
+        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetDragHandle = { BottomSheetDefaults.DragHandle() },
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                items(uiState.orderList) { order ->
+                    BasketScreenItem(
+                        item = order,
+                    )
+                }
+            }
+
+            BasketScreenBottomBar(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                uiState = uiState,
+                onCheckout = {
+                    coroutineScope.launch {
+                        bottomSheetState.show()
+                    }
+                    onCheckout()
+                }
+            )
         }
     }
 }
@@ -122,7 +173,8 @@ fun BasketScreenItem(
 ) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(vertical = 12.dp, horizontal = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -132,7 +184,8 @@ fun BasketScreenItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    modifier = Modifier.size(80.dp)
+                    modifier = Modifier
+                        .size(80.dp)
                         .clip(RoundedCornerShape(8.dp)),
                     model = item.imageUrl,
                     contentDescription = "Menu Image",
@@ -165,7 +218,8 @@ fun BasketScreenItem(
         }
 
         Spacer(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .height(1.dp)
                 .background(Grey40)
         )
@@ -174,12 +228,14 @@ fun BasketScreenItem(
 
 @Composable
 fun BasketScreenBottomBar(
+    modifier: Modifier = Modifier,
     uiState: BasketScreenViewModel.UIState,
     onCheckout: () -> Unit = {}
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .background(Red)
+        modifier = modifier
+            .fillMaxWidth()
+//            .background(Red)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
