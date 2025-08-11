@@ -36,18 +36,6 @@ class BasketScreenViewModel(
         initialValue = UIState(emptyList())
     )
 
-    fun onEvent(event: UIEvent) {
-        when (event) {
-            is UIEvent.AddAddress -> {
-                _currentAddress.value = event.address
-            }
-        }
-    }
-
-    sealed interface UIEvent {
-        data class AddAddress(val address: String) : UIEvent
-    }
-
     data class UIState(
         val orderList: List<BasketItemEntity>,
         val totalPrice: String = "",
