@@ -1,5 +1,6 @@
 package com.work.products.screen.confirm
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.work.stores_service.data.model.ProductData
@@ -17,12 +18,14 @@ import kotlinx.coroutines.launch
 
 class ConfirmOrderScreenViewModel(
     private val productRepository: IProductRepository,
-    private val basketRepository: IBasketRepository
+    private val basketRepository: IBasketRepository,
+    savedStateHandle: SavedStateHandle
 ): ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     private val _isSuccess = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
 
+    private val address = savedStateHandle.get<String>("address")
     val uiState = combine(
         _isLoading,
         _error
@@ -37,7 +40,11 @@ class ConfirmOrderScreenViewModel(
         initialValue = UIState()
     )
 
-    fun submitOrder(address: String) {
+    init {
+        submitOrder()
+    }
+
+    fun submitOrder() {
         _isLoading.value = true
 
         viewModelScope.launch {
@@ -47,7 +54,7 @@ class ConfirmOrderScreenViewModel(
             productRepository.createOrder(
                 orderBody = OrderBody(
                     products = summaryProducts,
-                    deliveryAddress = address
+                    deliveryAddress = address ?: "-"
                 )
             ).catch {
                 _isLoading.value = false

@@ -10,5 +10,5 @@ sealed interface Route {
     data object BasketScreen : Route
 
     @Serializable
-    data object SuccessScreen : Route
+    data class SuccessScreen(val address: String) : Route
 }

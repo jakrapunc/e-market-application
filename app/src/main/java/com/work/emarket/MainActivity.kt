@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.navigation.Route
 import com.work.products.screen.basket.BasketScreen
+import com.work.products.screen.confirm.ConfirmOrderScreen
 import com.work.products.screen.store.StoreScreen
 
 class MainActivity : ComponentActivity() {
@@ -45,6 +46,14 @@ class MainActivity : ComponentActivity() {
                             },
                             onSubmit = {
                                 // I want to navigate to complete order screen by sending address to it
+                                navController.navigate(Route.SuccessScreen(it))
+                            }
+                        )
+                    }
+                    composable<Route.SuccessScreen> {
+                        ConfirmOrderScreen(
+                            onDone = {
+                                navController.popBackStack(Route.StoreScreen, false)
                             }
                         )
                     }
