@@ -67,13 +67,15 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StoreScreen(
-    viewModel: StoreScreenViewModel = koinViewModel()
+    viewModel: StoreScreenViewModel = koinViewModel(),
+    onNavigateToBasket: () -> Unit = {}
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
     StoreScreen(
         uiState = uiState.value,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onNavigateToBasket = onNavigateToBasket
     )
 }
 
