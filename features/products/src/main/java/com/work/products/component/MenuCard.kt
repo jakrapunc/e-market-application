@@ -41,7 +41,6 @@ fun MenuCard(
     imageUrl: String = "",
     onPlusClick: () -> Unit = {},
     onMinusClick: () -> Unit = {},
-    onValueChange: (String) -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -90,7 +89,6 @@ fun MenuCard(
                     value = itemCount,
                     onPlusClick = onPlusClick,
                     onMinusClick = onMinusClick,
-                    onValueChange = onValueChange
                 )
             }
         }
@@ -104,13 +102,6 @@ fun MenuCardPreview() {
         var currentValue by remember { mutableIntStateOf(0) }
         MenuCard(
             itemCount = currentValue,
-            onValueChange = {
-                if (it.isEmpty()) {
-                    currentValue = 0
-                    return@MenuCard
-                }
-                it.toIntOrNull()?.let { num -> currentValue = num }
-            },
             onPlusClick = {
                 currentValue++
             },

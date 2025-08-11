@@ -300,9 +300,6 @@ fun StoreScreen(
                             onMinusClick = {
                                 onEvent(StoreScreenViewModel.UIEvent.RemoveItem(product))
                             },
-                            onValueChange = {
-                                onEvent(StoreScreenViewModel.UIEvent.UpdateItem(product, it.toIntOrNull() ?: 0))
-                            }
                         )
                     }
                 }

@@ -50,9 +50,6 @@ fun ItemCountLayout(
                 modifier = Modifier.size(width = 18.dp, height = 24.dp),
                 fontSize = 14.sp,
                 value = value.toString(),
-                onChange = {
-                    onValueChange(it)
-                }
             )
         }
         AddButton(

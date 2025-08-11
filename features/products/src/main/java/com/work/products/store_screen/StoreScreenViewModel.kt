@@ -29,7 +29,6 @@ class StoreScreenViewModel(
     private val _productList = MutableStateFlow<List<ProductData>>(emptyList())
     private val _isLoading = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
-    private val _orderList = MutableStateFlow<Map<ProductData, Int>>(emptyMap())
 
     private val _localBasket = basketRepository.getCurrentBasket().stateIn(
         scope = viewModelScope,
@@ -90,35 +89,11 @@ class StoreScreenViewModel(
                 viewModelScope.launch {
                     basketRepository.addToBasket(event.data, 1)
                 }
-//                _orderList.update {
-//                    it.toMutableMap().apply {
-//                        if ((this[event.data] ?: 0) < 99) {
-//                            this[event.data] = (this[event.data] ?: 0) + 1
-//                        }
-//                    }
-//                }
             }
             is UIEvent.RemoveItem -> {
                 viewModelScope.launch {
                     basketRepository.removeBasketItem(event.data.name)
                 }
-//                _orderList.update {
-//                    it.toMutableMap().apply {
-//                        if (this[event.data] != null && (this[event.data] ?: 0) > 0) {
-//                            this[event.data] = (this[event.data] ?: 0) - 1
-//                        }
-//                    }
-//                }
-            }
-            is UIEvent.UpdateItem -> {
-                viewModelScope.launch {
-                    basketRepository.updateBasketItem(event.data, event.count)
-                }
-//                _orderList.update {
-//                    it.toMutableMap().apply {
-//                        this[event.data] = event.count
-//                    }
-//                }
             }
         }
     }
@@ -130,7 +105,6 @@ class StoreScreenViewModel(
     sealed interface UIEvent {
         data class AddItem(val data: ProductData): UIEvent
         data class RemoveItem(val data: ProductData): UIEvent
-        data class UpdateItem(val data: ProductData, val count: Int): UIEvent
     }
 
     data class UIState(

@@ -11,7 +11,6 @@ interface IBasketRepository {
     fun getBasketItemByName(name: String): Flow<BasketItemEntity?>
 
     suspend fun addToBasket(productData: ProductData, quantity: Int = 1)
-    suspend fun updateBasketItem(productData: ProductData, quantity: Int)
     suspend fun removeBasketItem(productName: String)
     suspend fun clearBasket()
 }
@@ -51,33 +50,6 @@ class BasketRepository(
                     price = productData.price,
                     imageUrl = productData.imageUrl,
                     quantity = 1,
-                )
-            )
-        }
-    }
-
-    override suspend fun updateBasketItem(
-        productData: ProductData,
-        quantity: Int
-    ) {
-        val existingItem = basketDao.getBasketItemByName(productData.name).firstOrNull()
-
-        existingItem?.let {
-            basketDao.update(
-                BasketItemEntity(
-                    productName = productData.name,
-                    price = productData.price,
-                    quantity = quantity,
-                    imageUrl = productData.imageUrl
-                )
-            )
-        } ?: kotlin.run {
-            basketDao.insert(
-                BasketItemEntity(
-                    productName = productData.name,
-                    price = productData.price,
-                    imageUrl = productData.imageUrl,
-                    quantity = quantity,
                 )
             )
         }

@@ -28,8 +28,7 @@ import com.work.base.compose.theme.Purple80
 @Composable
 fun NumberInput(
     modifier: Modifier = Modifier,
-    value: String = "1",
-    maxValue: Int = 99,
+    value: String,
     fontSize: TextUnit = 12.sp,
     onChange: (String) -> Unit = {},
 ) {
@@ -49,12 +48,9 @@ fun NumberInput(
         value = value,
         onValueChange = {
             if (it.isEmpty()) {
-                onChange("")
-                return@BasicTextField
-            }
-
-            it.toIntOrNull()?.let { number ->
-                if (number <= maxValue) {
+                onChange("0")
+            } else {
+                it.toIntOrNull()?.let { number ->
                     onChange(number.toString())
                 }
             }
@@ -69,7 +65,7 @@ fun NumberInput(
             imeAction = ImeAction.Done
         ),
         modifier = modifier,
-
+        enabled = false
     ) { decorationBox ->
         TextFieldDefaults.DecorationBox(
             value = value,
@@ -82,7 +78,7 @@ fun NumberInput(
                 bottom = 0.dp
             ),
             colors = colors,
-            enabled = true,
+            enabled = false,
             visualTransformation = VisualTransformation.None,
             interactionSource = interactionSource,
             shape = RoundedCornerShape(size = 4.dp),
@@ -99,7 +95,9 @@ fun NumberInput2Preview() {
             modifier = Modifier
                 .width(20.dp)
                 .height(12.dp),
-            fontSize = 10.sp
+            fontSize = 10.sp,
+            value = "1",
+            onChange = {}
         )
     }
 }
