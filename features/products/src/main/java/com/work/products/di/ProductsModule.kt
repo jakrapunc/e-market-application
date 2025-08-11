@@ -1,7 +1,7 @@
 package com.work.products.di
 
-import com.work.products.basket_screen.BasketScreenViewModel
-import com.work.products.store_screen.StoreScreenViewModel
+import com.work.products.screen.basket.BasketScreenViewModel
+import com.work.products.screen.store.StoreScreenViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

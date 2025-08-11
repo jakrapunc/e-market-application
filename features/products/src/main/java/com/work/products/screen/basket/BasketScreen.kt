@@ -1,4 +1,4 @@
-package com.work.products.basket_screen
+package com.work.products.screen.basket
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +51,7 @@ import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Grey40
 import com.work.base.compose.theme.White
 import com.work.base.extension.toPriceString
+import com.work.design.R
 import com.work.stores_service.data.model.entity.BasketItemEntity
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -180,7 +180,7 @@ fun BasketScreenItem(
                     model = item.imageUrl,
                     contentDescription = "Menu Image",
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = com.work.design.R.drawable.placeholder)
+                    placeholder = painterResource(id = R.drawable.placeholder)
                 )
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)

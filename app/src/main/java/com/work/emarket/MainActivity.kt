@@ -13,8 +13,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.navigation.Route
-import com.work.products.basket_screen.BasketScreen
-import com.work.products.store_screen.StoreScreen
+import com.work.products.screen.basket.BasketScreen
+import com.work.products.screen.store.StoreScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             },
                             onSubmit = {
-                                // I want to navigate to complete order screen by sending adress to it
+                                // I want to navigate to complete order screen by sending address to it
                             }
                         )
                     }

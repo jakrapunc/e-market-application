@@ -1,4 +1,4 @@
-package com.work.products.store_screen
+package com.work.products.screen.store
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

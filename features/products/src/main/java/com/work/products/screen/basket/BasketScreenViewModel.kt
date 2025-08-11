@@ -1,4 +1,4 @@
-package com.work.products.basket_screen
+package com.work.products.screen.basket
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
