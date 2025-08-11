@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.work.base.compose.component.PrimaryButton
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Grey40
+import com.work.base.compose.theme.Red
 import com.work.base.extension.toPriceString
 import com.work.stores_service.data.model.entity.BasketItemEntity
 import org.koin.androidx.compose.koinViewModel
@@ -91,6 +94,12 @@ fun BasketScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
+            )
+        },
+        bottomBar = {
+            BasketScreenBottomBar(
+                uiState = uiState,
+                onCheckout = onCheckout
             )
         }
     ) { padding ->
@@ -168,7 +177,31 @@ fun BasketScreenBottomBar(
     uiState: BasketScreenViewModel.UIState,
     onCheckout: () -> Unit = {}
 ) {
-    
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .background(Red)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = "Total",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                text = "฿ ${uiState.totalPrice}",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
+
+        PrimaryButton(
+            modifier = Modifier.width(200.dp),
+            text = "Checkout",
+            onClick = onCheckout
+        )
+    }
 }
 
 @Preview(showBackground = true)
