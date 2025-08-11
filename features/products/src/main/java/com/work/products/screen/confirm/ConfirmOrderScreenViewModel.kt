@@ -3,6 +3,8 @@ package com.work.products.screen.confirm
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.work.base.navigation.Route
 import com.work.stores_service.data.model.ProductData
 import com.work.stores_service.data.model.entity.BasketItemEntity
 import com.work.stores_service.data.model.request.OrderBody
@@ -25,22 +27,29 @@ class ConfirmOrderScreenViewModel(
     private val _isSuccess = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
 
-    private val address = savedStateHandle.get<String>("address")
+    private val address = MutableStateFlow<String?>(null)
+
     val uiState = combine(
         _isLoading,
+        _isSuccess,
         _error
-    ) { isLoading, error ->
+    ) { isLoading, isSuccess, error ->
         UIState(
             isLoading = isLoading,
+            isSuccess = isSuccess,
             error = error
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.WhileSubscribed(),
         initialValue = UIState()
     )
 
     init {
+        val args = savedStateHandle.toRoute< Route.SuccessScreen>()
+
+        address.value = args.address
+
         submitOrder()
     }
 
@@ -54,7 +63,7 @@ class ConfirmOrderScreenViewModel(
             productRepository.createOrder(
                 orderBody = OrderBody(
                     products = summaryProducts,
-                    deliveryAddress = address ?: "-"
+                    deliveryAddress = address.value ?: "-"
                 )
             ).catch {
                 _isLoading.value = false
@@ -62,6 +71,8 @@ class ConfirmOrderScreenViewModel(
             }.collect {
                 _isLoading.value = false
                 _isSuccess.value = true
+
+                basketRepository.clearBasket()
             }
         }
     }
@@ -86,7 +97,6 @@ class ConfirmOrderScreenViewModel(
 
     data class UIState(
         val isLoading: Boolean = false,
-        val address: String = "",
         val error: String? = null,
         val isSuccess: Boolean = false
     )
