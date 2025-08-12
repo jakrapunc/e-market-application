@@ -23,7 +23,7 @@ abstract class NetworkBoundResource<ResponseType> {
                 saveCallResult(response.body()!!)
                 emit(response.body()!!)
             } else {
-                throw kotlin.Exception("Data is null")
+                throw kotlin.Exception(response.errorBody()?.string())
             }
         } else {
             emitAll(localDataFlow)

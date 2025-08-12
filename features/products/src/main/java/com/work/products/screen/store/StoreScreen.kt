@@ -147,7 +147,7 @@ fun StoreScreen(
         },
         bottomBar = {
             AnimatedVisibility(
-                (uiState.totalItem > 0) && !uiState.isLoading,
+                (uiState.totalItem > 0) && !uiState.isLoading && uiState.error == null,
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
