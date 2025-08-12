@@ -30,10 +30,10 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = Route.StoreScreen,
                     enterTransition = {
-                        slideInHorizontally(initialOffsetX = { -it })
+                        slideInHorizontally(initialOffsetX = { it })
                     },
                     exitTransition = {
-                        slideOutHorizontally(targetOffsetX = { -it })
+                        slideOutHorizontally(targetOffsetX = { it })
                     }
                 ) {
                     composable<Route.StoreScreen> {

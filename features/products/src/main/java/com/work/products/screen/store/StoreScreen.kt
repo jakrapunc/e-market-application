@@ -19,9 +19,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +57,8 @@ import coil.compose.AsyncImage
 import com.work.base.compose.component.BasketButton
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Grey40
+import com.work.base.compose.theme.Red
+import com.work.base.compose.theme.Red80
 import com.work.base.compose.theme.White
 import com.work.base.extension.toPriceString
 import com.work.design.R
@@ -142,7 +147,7 @@ fun StoreScreen(
         },
         bottomBar = {
             AnimatedVisibility(
-                uiState.totalItem > 0,
+                (uiState.totalItem > 0) && !uiState.isLoading,
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -196,98 +201,143 @@ fun StoreScreen(
                     )
                 }
             }
-            item(key = 1, contentType = "subHeader") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
-                    Text(
-                        text = uiState.storeInfo?.name ?: "",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+            if (uiState.isLoading) {
+                item(key = 4, contentType = "loading") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(top = 120.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            modifier = Modifier.size(12.dp),
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "",
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 2.dp),
-                            text = uiState.storeInfo?.rating?.toString() ?: "",
-                            color = MaterialTheme.colorScheme.tertiary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(modifier = Modifier.width(24.dp))
-                        Icon(
-                            modifier = Modifier.size(12.dp),
-                            painter = painterResource(R.drawable.store),
-                            contentDescription = "",
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 4.dp),
-                            text = "${uiState.storeInfo?.openingTime} - ${uiState.storeInfo?.closingTime}",
-                            color = MaterialTheme.colorScheme.tertiary,
-                            style = MaterialTheme.typography.bodyMedium
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(186.dp),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
-            }
+            } else if (uiState.error != null) {
+                item(key = 5, contentType = "error") {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(top = 120.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier.size(186.dp)
+                                .background(Red, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(130.dp)
+                                    .background(Red80, shape = CircleShape)
+                                    .padding(36.dp),
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "",
+                                tint = White
+                            )
+                        }
 
-            item(key = 2, contentType = "menuHeader") {
-                Column(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-
-                ) {
-                    Spacer(
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Text(
+                            text = uiState.error,
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                }
+            } else {
+                item(key = 1, contentType = "subHeader") {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(8.dp)
-                            .background(Grey40)
-                    )
-                    Text(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        text = "Menu",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            item(key = 3, contentType = "menuItems") {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillParentMaxHeight()
-                        .padding(horizontal = 20.dp)
-                        .nestedScroll(nestedScrollConnection),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(uiState.products) { product ->
-                        MenuCard(
-                            itemCount = uiState.orderList.find { it.productName == product.name }?.quantity ?: 0,
-                            price = product.price.toPriceString(),
-                            menuName = product.name,
-                            imageUrl = product.imageUrl,
-                            onPlusClick = {
-                                onEvent(StoreScreenViewModel.UIEvent.AddItem(product))
-                            },
-                            onMinusClick = {
-                                onEvent(StoreScreenViewModel.UIEvent.RemoveItem(product))
-                            },
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Text(
+                            text = uiState.storeInfo?.name ?: "",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(12.dp),
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                            Text(
+                                modifier = Modifier.padding(start = 2.dp),
+                                text = uiState.storeInfo?.rating?.toString() ?: "",
+                                color = MaterialTheme.colorScheme.tertiary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.width(24.dp))
+                            Icon(
+                                modifier = Modifier.size(12.dp),
+                                painter = painterResource(R.drawable.store),
+                                contentDescription = "",
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                            Text(
+                                modifier = Modifier.padding(start = 4.dp),
+                                text = "${uiState.storeInfo?.openingTime} - ${uiState.storeInfo?.closingTime}",
+                                color = MaterialTheme.colorScheme.tertiary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                item(key = 2, contentType = "menuHeader") {
+                    Column(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+
+                    ) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .background(Grey40)
+                        )
+                        Text(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            text = "Menu",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                item(key = 3, contentType = "menuItems") {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillParentMaxHeight()
+                            .padding(horizontal = 20.dp)
+                            .nestedScroll(nestedScrollConnection),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(uiState.products) { product ->
+                            MenuCard(
+                                itemCount = uiState.orderList.find { it.productName == product.name }?.quantity ?: 0,
+                                price = product.price.toPriceString(),
+                                menuName = product.name,
+                                imageUrl = product.imageUrl,
+                                onPlusClick = {
+                                    onEvent(StoreScreenViewModel.UIEvent.AddItem(product))
+                                },
+                                onMinusClick = {
+                                    onEvent(StoreScreenViewModel.UIEvent.RemoveItem(product))
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -300,7 +350,9 @@ fun StoreScreen(
 fun StoreScreenPreview() {
     EMarketTheme {
         StoreScreen(
-            uiState = StoreScreenViewModel.UIState(),
+            uiState = StoreScreenViewModel.UIState(
+                error = "Loading Error"
+            ),
             onEvent = {},
         )
     }

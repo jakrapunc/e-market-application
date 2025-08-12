@@ -75,6 +75,7 @@ class StoreScreenViewModel(
         viewModelScope.launch {
             try {
                 withContext(coroutineDispatcher) {
+                    _isLoading.update { true }
                     val storeData = async { productRepository.getStoreInfo().first() }
                     val products = async { productRepository.getProducts().first() }
 
@@ -82,9 +83,12 @@ class StoreScreenViewModel(
                     val productResult = products.await()
                     _storeInfo.update { storeResult }
                     _productList.update { productResult }
+                    _isLoading.update { false }
+                    _error.update { null }
                 }
             } catch (e: Exception) {
                 _error.update { e.message }
+                _isLoading.update { false }
             }
         }
     }

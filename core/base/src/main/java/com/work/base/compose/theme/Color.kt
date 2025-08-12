@@ -13,6 +13,8 @@ val Purple10 = Color(0xFFF1EFF6)
 
 val Red = Color(0xFFFEF0F0)
 
+val Red80 = Color(0xFFF9A8A8)
+
 val White = Color(0xFFFFFFFF)
 
 val Green80 = Color(0xFF4CD964)
