@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(project(":core:network"))
+    implementation(libs.core.ktx)
 
     ksp(libs.room.ksp)
 

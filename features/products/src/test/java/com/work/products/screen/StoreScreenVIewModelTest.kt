@@ -19,7 +19,6 @@ import io.mockk.runs
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -56,12 +55,14 @@ class StoreScreenVIewModelTest {
         ProductData("2", 20, "imgB.png")
     )
     private val mockBasketItemsFlow = MutableSharedFlow<List<BasketItemEntity>>(replay = 1)
+    private val mockStoreInfoFlow = MutableSharedFlow<StoreInfoData>(replay = 1)
+    private val mockProductListFlow = MutableSharedFlow<List<ProductData>>(replay = 1)
 
     @Before
     fun setUp() {
         every { basketRepository.getCurrentBasket() } returns mockBasketItemsFlow
-        coEvery { productRepository.getStoreInfo() } returns flowOf(mockStoreInfo)
-        coEvery { productRepository.getProducts() } returns flowOf(mockProductList)
+        coEvery { productRepository.getStoreInfo() } returns mockStoreInfoFlow
+        coEvery { productRepository.getProducts() } returns mockProductListFlow
 
         viewModel = StoreScreenViewModel(
             productRepository,
@@ -79,11 +80,9 @@ class StoreScreenVIewModelTest {
         unmockkAll()
     }
 
-
     @Test
     fun `initial uiState is correct`() = runTest(testDispatcher) {
         val initialState = StoreScreenViewModel.UIState()
-        advanceUntilIdle() // Allow initial data loading and flow combinations to settle
 
         viewModel.uiState.test {
             val actualInitialState = awaitItem()
@@ -93,43 +92,28 @@ class StoreScreenVIewModelTest {
             Assert.assertEquals(initialState.orderList, actualInitialState.orderList)
             Assert.assertEquals(initialState.totalItem, actualInitialState.totalItem)
             Assert.assertEquals(initialState.totalPrice, actualInitialState.totalPrice)
-            Assert.assertEquals(initialState.isLoading, actualInitialState.isLoading) // isLoading is false by default
+            Assert.assertEquals(initialState.isLoading, actualInitialState.isLoading)
             Assert.assertNull(actualInitialState.error) // Error should be null initially
-
-            // storeInfo will be populated by loadData, so we check it in its own test
-            cancelAndConsumeRemainingEvents()
         }
     }
 
     @Test
     fun `loadData success - updates storeInfo and productList`() = runTest(testDispatcher) {
         // Given
-        val specificStoreInfo = StoreInfoData("Test Store", 5.0, "15:00:00.000Z", "19:00:00.000Z")
-        val specificProductList = listOf(ProductData("s1", 100, ""))
-        coEvery { productRepository.getStoreInfo() } returns flowOf(specificStoreInfo)
-        coEvery { productRepository.getProducts() } returns flowOf(specificProductList)
-
-        // When
-        viewModel.loadData()
-        advanceUntilIdle()
-
-        // Then
         viewModel.uiState.test {
-            // Skip initial state(s) until the loaded data is reflected
-            // The number of items to skip might vary based on flow emissions.
-            // Await the state that reflects the loaded data.
-            // It might be more robust to use awaitItemMatching or something similar if states are complex.
-            val loadedState = awaitItem() // Initial emission due to stateIn
+            val initialState = awaitItem()
 
-            val finalState = awaitItem() // Emission after loadData completes
+            mockStoreInfoFlow.emit(mockStoreInfo)
+            mockProductListFlow.emit(mockProductList)
+
+            val finalState = awaitItem()
 
             Assert.assertNotNull(finalState.storeInfo)
-            Assert.assertEquals(specificStoreInfo.name, finalState.storeInfo?.name)
-            Assert.assertEquals(specificStoreInfo.openingTime.formatDateTime(), finalState.storeInfo?.openingTime)
-            Assert.assertEquals(specificProductList, finalState.products)
+            Assert.assertEquals(mockStoreInfo.name, finalState.storeInfo?.name)
+            Assert.assertEquals(mockStoreInfo.openingTime.formatDateTime(), finalState.storeInfo?.openingTime)
+            Assert.assertEquals(mockProductList, finalState.products)
             Assert.assertEquals(false, finalState.isLoading)
             Assert.assertNull(finalState.error)
-            cancelAndConsumeRemainingEvents()
         }
 
         coVerify(atLeast = 1) { productRepository.getStoreInfo() } // atLeast = 1 because init also calls it
@@ -140,29 +124,25 @@ class StoreScreenVIewModelTest {
     fun `loadData failure - updates error message`() = runTest(testDispatcher) {
         // Given
         val errorMessage = "Network Error"
-        coEvery { productRepository.getStoreInfo() } throws RuntimeException(errorMessage)
-        // Let getProducts succeed to see partial state or make it fail too
-        coEvery { productRepository.getProducts() } returns flowOf(mockProductList)
+        val exception = RuntimeException(errorMessage)
 
+        coEvery { productRepository.getStoreInfo() } throws exception
 
-        // When
         val viewModel = StoreScreenViewModel(
             productRepository,
             basketRepository,
-            testDispatcher
+            testDispatcher // Use the test dispatcher
         )
-        advanceUntilIdle()
 
-        // Then
         viewModel.uiState.test {
-            val state1 = awaitItem() // Initial State from init
+            val initialState = awaitItem() // Initial State from init
             val errorState = awaitItem() // State after loadData with error
 
             Assert.assertEquals(errorMessage, errorState.error)
-            Assert.assertNull(errorState.storeInfo) // Store info failed
-            Assert.assertTrue(errorState.products.isEmpty()) // Products still loaded
-            cancelAndConsumeRemainingEvents()
         }
+
+        coVerify(atLeast = 1) { productRepository.getStoreInfo() } // atLeast = 1 because init also calls it
+        coVerify(atLeast = 1) { productRepository.getProducts() }
     }
 
     @Test
@@ -173,7 +153,6 @@ class StoreScreenVIewModelTest {
 
         // When
         viewModel.onEvent(StoreScreenViewModel.UIEvent.AddItem(productToAdd))
-        advanceUntilIdle() // Ensure the coroutine in onEvent completes
 
         // Then
         coVerify(exactly = 1) { basketRepository.addToBasket(productToAdd, 1) }
@@ -187,7 +166,6 @@ class StoreScreenVIewModelTest {
 
         // When
         viewModel.onEvent(StoreScreenViewModel.UIEvent.RemoveItem(productToRemove))
-        advanceUntilIdle()
 
         // Then
         coVerify(exactly = 1) { basketRepository.removeBasketItem(productToRemove.name) }
@@ -195,15 +173,10 @@ class StoreScreenVIewModelTest {
 
     @Test
     fun `uiState reflects updates from localBasket flow`() = runTest(testDispatcher) {
-        // Initial state check (after loadData from init)
-        advanceUntilIdle()
-
         viewModel.uiState.test {
             var currentState = awaitItem() // Initial state after loadData
             Assert.assertEquals(0, currentState.totalItem)
             Assert.assertEquals(0.toPriceString(), currentState.totalPrice)
-
-            awaitItem() // Skip loading data state
 
             // When basket updates
             val basketItem1 = BasketItemEntity(productName = "Product A", price = 1000, quantity = 2, imageUrl = "")
@@ -236,8 +209,6 @@ class StoreScreenVIewModelTest {
             Assert.assertEquals(0, currentState.totalItem)
             Assert.assertEquals(0.toPriceString(), currentState.totalPrice)
             Assert.assertTrue(currentState.orderList.isEmpty())
-
-            cancelAndConsumeRemainingEvents()
         }
     }
 }

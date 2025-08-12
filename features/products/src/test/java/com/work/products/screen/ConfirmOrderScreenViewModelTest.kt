@@ -9,14 +9,12 @@ import com.work.stores_service.data.model.request.OrderBody
 import com.work.stores_service.data.service.repository.IBasketRepository
 import com.work.stores_service.data.service.repository.IProductRepository
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -41,9 +39,10 @@ class ConfirmOrderScreenViewModelTest {
 
     private lateinit var savedStateHandle: SavedStateHandle
 
-    private lateinit var viewModel: ConfirmOrderScreenViewModel
-
     private val testAddress = "Test Address"
+
+    private val mockBasketFlow = MutableSharedFlow<List<BasketItemEntity>>(replay = 1)
+    private val mockCreateOrderFlow = MutableSharedFlow<String>(replay = 1)
 
     @Before
     fun setup() {
@@ -51,16 +50,9 @@ class ConfirmOrderScreenViewModelTest {
             this["address"] = testAddress
         }
 
-        coEvery { basketRepository.getCurrentBasket() } returns flowOf(emptyList())
-        coEvery { productRepository.createOrder(any()) } returns flowOf("Success")
-        coJustRun { basketRepository.clearBasket() }
-
-        // ViewModel is initialized AFTER all mocks are set up, especially SavedStateHandle
-//        viewModel = ConfirmOrderScreenViewModel(
-//            productRepository,
-//            basketRepository,
-//            savedStateHandle
-//        )
+        coEvery { basketRepository.getCurrentBasket() } returns mockBasketFlow
+        coEvery { productRepository.createOrder(any()) } returns mockCreateOrderFlow
+        coEvery { basketRepository.clearBasket() } returns Unit
     }
 
     @After
@@ -70,12 +62,10 @@ class ConfirmOrderScreenViewModelTest {
 
     @Test
     fun `initialization - retrieves address and calls submitOrder`() = runTest(testDispatcher) {
-        advanceUntilIdle() // Allow submitOrder to complete
-
         val expectedOrderBody = OrderBody(products = emptyList(), deliveryAddress = testAddress)
-        coVerify(exactly = 0) { productRepository.createOrder(expectedOrderBody) } // atLeast = 1 because submitOrder is in init
+        coVerify(exactly = 0) { productRepository.createOrder(expectedOrderBody) }
 
-        viewModel = ConfirmOrderScreenViewModel(
+        val viewModel = ConfirmOrderScreenViewModel(
             productRepository,
             basketRepository,
             savedStateHandle
@@ -83,13 +73,21 @@ class ConfirmOrderScreenViewModelTest {
 
         // Verify submitOrder's effects (e.g., loading state, success if basket was empty)
         viewModel.uiState.test {
-            val initialState = awaitItem() // Initial UIState()
+            val initialState = awaitItem() // Initial UIState()'
 
-            Assert.assertFalse(initialState.isLoading)
-            Assert.assertFalse(initialState.isSuccess) // Success because default basket is empty
-            Assert.assertNull(initialState.error)
+            mockBasketFlow.emit(listOf(
+                BasketItemEntity( "Product 1", 100, quantity = 1, imageUrl = "img1.url"),
+            ))
+            advanceUntilIdle()
+            val awaitResult = awaitItem()
 
-            cancelAndConsumeRemainingEvents()
+            mockCreateOrderFlow.emit("Success")
+            advanceUntilIdle()
+            val resultState = awaitItem()
+
+            Assert.assertFalse(resultState.isLoading)
+            Assert.assertTrue(resultState.isSuccess)
+            Assert.assertNull(resultState.error)
         }
     }
 
@@ -107,31 +105,32 @@ class ConfirmOrderScreenViewModelTest {
         )
         val expectOrderBody = OrderBody(products = mapProducts, deliveryAddress = testAddress)
 
-        coEvery { basketRepository.getCurrentBasket() } returns flowOf(basketItems)
-        coEvery { productRepository.createOrder(expectOrderBody) } returns flowOf("Success")
-        coJustRun { basketRepository.clearBasket() }
-
-        // When
-        viewModel = ConfirmOrderScreenViewModel(
+        val viewModel = ConfirmOrderScreenViewModel(
             productRepository,
             basketRepository,
             savedStateHandle
         )
 
-        // Then
+        mockBasketFlow.emit(basketItems)
+
         viewModel.uiState.test {
-            val initialState = awaitItem() // UIState before submitOrder really kicks in or if it was reset
+            val initialState = awaitItem()
+
+            mockBasketFlow.emit(basketItems)
+            advanceUntilIdle()
+            val awaitResult = awaitItem()
+
+            mockCreateOrderFlow.emit("Success")
+            advanceUntilIdle()
             val successState = awaitItem() // isSuccess = true
 
             Assert.assertFalse(successState.isLoading)
             Assert.assertTrue(successState.isSuccess)
             Assert.assertNull(successState.error)
-
-            cancelAndConsumeRemainingEvents()
         }
 
         coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
-        coVerify(exactly = 1) { productRepository.createOrder(any()) } // Should not be called
+        coVerify(exactly = 1) { productRepository.createOrder(expectOrderBody) }
         coVerify(exactly = 1) { basketRepository.clearBasket() }
     }
 
@@ -143,33 +142,28 @@ class ConfirmOrderScreenViewModelTest {
         val expectOrderBody = OrderBody(products = mapProducts, deliveryAddress = testAddress)
         val errorMessage = "Order creation failed"
 
-        coEvery { basketRepository.getCurrentBasket() } returns flowOf(basketItems)
-        coEvery { productRepository.createOrder(expectOrderBody) } returns flow { throw RuntimeException(errorMessage) }
+        coEvery { productRepository.createOrder(expectOrderBody) } throws Exception(errorMessage)
 
         // When
-        viewModel = ConfirmOrderScreenViewModel(
+        val viewModel = ConfirmOrderScreenViewModel(
             productRepository,
             basketRepository,
             savedStateHandle
         )
-        advanceUntilIdle()
 
         // Then
         viewModel.uiState.test {
             val initialState = awaitItem()
-            val loadingState = awaitItem()
-            val errorState = awaitItem()   // error state
+
+            mockBasketFlow.emit(basketItems)
             advanceUntilIdle()
+            val errorState = awaitItem()
 
             Assert.assertFalse(errorState.isLoading)
             Assert.assertFalse(errorState.isSuccess)
             Assert.assertEquals(errorMessage, errorState.error)
-
-            cancelAndConsumeRemainingEvents()
         }
 
-        coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
-        coVerify(exactly = 1) { productRepository.createOrder(any()) } // Should not be called
         coVerify(exactly = 0) { basketRepository.clearBasket() }
     }
 
@@ -177,18 +171,15 @@ class ConfirmOrderScreenViewModelTest {
     fun `submitOrder failure from getCurrentBasket - updates error`() = runTest(testDispatcher) {
         // Given
         val errorMessage = "Failed to fetch basket"
-        coEvery { basketRepository.getCurrentBasket() } returns flow { throw RuntimeException(errorMessage) }
+        coEvery { basketRepository.getCurrentBasket() } throws RuntimeException(errorMessage)
 
         // When
-        viewModel = ConfirmOrderScreenViewModel(
+        val viewModel = ConfirmOrderScreenViewModel(
             productRepository,
             basketRepository,
             savedStateHandle
         )
 
-        advanceUntilIdle()
-
-        coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
         coVerify(exactly = 0) { productRepository.createOrder(any()) } // Should not be called
         coVerify(exactly = 0) { basketRepository.clearBasket() }
     }

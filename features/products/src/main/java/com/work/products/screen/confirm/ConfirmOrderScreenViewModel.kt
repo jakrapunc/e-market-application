@@ -11,14 +11,17 @@ import com.work.stores_service.data.model.request.OrderBody
 import com.work.stores_service.data.service.repository.IBasketRepository
 import com.work.stores_service.data.service.repository.IProductRepository
 import com.work.stores_service.extension.toProductList
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class ConfirmOrderScreenViewModel(
     private val productRepository: IProductRepository,
     private val basketRepository: IBasketRepository,
@@ -40,9 +43,11 @@ class ConfirmOrderScreenViewModel(
             isSuccess = isSuccess,
             error = error
         )
-    }.stateIn(
+    }.debounce(
+        300
+    ).stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.WhileSubscribed(5_000),
         initialValue = UIState()
     )
 
@@ -56,12 +61,12 @@ class ConfirmOrderScreenViewModel(
 
     fun submitOrder() {
         _isLoading.value = true
-
         viewModelScope.launch {
             val basketItems =  try { basketRepository.getCurrentBasket().first() } catch (e: Exception) { emptyList() }
             val summaryProducts = basketItems.toProductList()
 
             if (summaryProducts.isEmpty()) {
+                _isLoading.value = false
                 return@launch
             }
 

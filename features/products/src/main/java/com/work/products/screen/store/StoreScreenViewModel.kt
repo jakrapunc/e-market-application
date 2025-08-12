@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -58,7 +59,9 @@ class StoreScreenViewModel(
             totalItem = localBasket.sumOf { it.quantity },
             totalPrice = localBasket.sumPrice().toPriceString()
         )
-    }.stateIn(
+    }.debounce(
+        300
+    ).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = UIState()

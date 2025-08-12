@@ -10,7 +10,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -22,7 +21,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
@@ -30,8 +28,6 @@ import java.io.IOException
 class ProductRepositoryTest {
     @get:Rule
     val mockkRule = MockKRule(this)
-
-    private val testDispatcher = StandardTestDispatcher()
 
     @MockK
     private lateinit var productRemote: IProductRemote
@@ -46,8 +42,6 @@ class ProductRepositoryTest {
     fun tearDown() {
         unmockkAll()
     }
-
-    // --- getStoreInfo Tests ---
 
     @Test
     fun `getStoreInfo success - calls remote and returns data from flow`() = runTest {
