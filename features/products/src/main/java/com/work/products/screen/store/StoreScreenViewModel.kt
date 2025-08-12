@@ -9,7 +9,9 @@ import com.work.stores_service.data.model.StoreInfoData
 import com.work.stores_service.data.model.entity.BasketItemEntity
 import com.work.stores_service.data.service.repository.IBasketRepository
 import com.work.stores_service.data.service.repository.IProductRepository
+import com.work.stores_service.extension.sumPrice
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@OptIn(FlowPreview::class)
 class StoreScreenViewModel(
     private val productRepository: IProductRepository,
     private val basketRepository: IBasketRepository,
@@ -53,7 +56,7 @@ class StoreScreenViewModel(
             error = error,
             orderList = localBasket,
             totalItem = localBasket.sumOf { it.quantity },
-            totalPrice = sumPrice(localBasket)
+            totalPrice = localBasket.sumPrice().toPriceString()
         )
     }.stateIn(
         scope = viewModelScope,
@@ -67,8 +70,8 @@ class StoreScreenViewModel(
 
     fun loadData() {
         viewModelScope.launch {
-            withContext(coroutineDispatcher) {
-                try {
+            try {
+                withContext(coroutineDispatcher) {
                     val storeData = async { productRepository.getStoreInfo().first() }
                     val products = async { productRepository.getProducts().first() }
 
@@ -76,9 +79,9 @@ class StoreScreenViewModel(
                     val productResult = products.await()
                     _storeInfo.update { storeResult }
                     _productList.update { productResult }
-                } catch (e: Exception) {
-                    _error.update { e.message }
                 }
+            } catch (e: Exception) {
+                _error.update { e.message }
             }
         }
     }
@@ -98,10 +101,6 @@ class StoreScreenViewModel(
         }
     }
 
-    private fun sumPrice(orderList: List<BasketItemEntity>): String {
-        return orderList.sumOf { it.quantity * it.price }.toPriceString()
-    }
-
     sealed interface UIEvent {
         data class AddItem(val data: ProductData): UIEvent
         data class RemoveItem(val data: ProductData): UIEvent
@@ -112,7 +111,7 @@ class StoreScreenViewModel(
         val products: List<ProductData> = emptyList(),
         val orderList: List<BasketItemEntity> = emptyList(),
         val totalItem: Int = 0,
-        val totalPrice: String = "",
+        val totalPrice: String = "0",
         val isLoading: Boolean = false,
         val error: String? = null
     )

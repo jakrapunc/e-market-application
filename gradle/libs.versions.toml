@@ -23,6 +23,7 @@ coilCompose = "2.4.0"
 navCompose = "2.9.3"
 kotlinxSerializationJson = "1.9.0"
 mockk = "1.14.5"
+turbine = "1.2.1"
 compileSdkVersion = "36"
 minSdkVersion = "24"
 targetSdkVersion = "36"
@@ -71,6 +72,8 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
+
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
