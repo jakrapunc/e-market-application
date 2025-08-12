@@ -10,6 +10,7 @@ import com.work.stores_service.data.model.entity.BasketItemEntity
 import com.work.stores_service.data.model.request.OrderBody
 import com.work.stores_service.data.service.repository.IBasketRepository
 import com.work.stores_service.data.service.repository.IProductRepository
+import com.work.stores_service.extension.toProductList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -46,9 +47,9 @@ class ConfirmOrderScreenViewModel(
     )
 
     init {
-        val args = savedStateHandle.toRoute< Route.SuccessScreen>()
+        val args = savedStateHandle.get<String>("address")
 
-        address.value = args.address
+        address.value = args
 
         submitOrder()
     }
@@ -57,8 +58,12 @@ class ConfirmOrderScreenViewModel(
         _isLoading.value = true
 
         viewModelScope.launch {
-            val basketItems = basketRepository.getCurrentBasket().first()
-            val summaryProducts = transformBasketItems(basketItems)
+            val basketItems =  try { basketRepository.getCurrentBasket().first() } catch (e: Exception) { emptyList() }
+            val summaryProducts = basketItems.toProductList()
+
+            if (summaryProducts.isEmpty()) {
+                return@launch
+            }
 
             productRepository.createOrder(
                 orderBody = OrderBody(
@@ -68,31 +73,15 @@ class ConfirmOrderScreenViewModel(
             ).catch {
                 _isLoading.value = false
                 _error.value = it.message
+                _isSuccess.value = false
             }.collect {
                 _isLoading.value = false
                 _isSuccess.value = true
+                _error.value = null
 
                 basketRepository.clearBasket()
             }
         }
-    }
-
-    private fun transformBasketItems(basketItems: List<BasketItemEntity>): List<ProductData> {
-        val summaryProducts = mutableListOf<ProductData>()
-
-        basketItems.forEach { basket ->
-            repeat(basket.quantity) {
-                summaryProducts.add(
-                    ProductData(
-                        name = basket.productName,
-                        price = basket.price,
-                        imageUrl = basket.imageUrl
-                    )
-                )
-            }
-        }
-
-        return summaryProducts
     }
 
     data class UIState(
