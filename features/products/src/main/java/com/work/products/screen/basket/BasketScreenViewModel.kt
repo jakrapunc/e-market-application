@@ -8,6 +8,8 @@ import com.work.stores_service.data.service.repository.IBasketRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 class BasketScreenViewModel(
@@ -19,16 +21,10 @@ class BasketScreenViewModel(
         initialValue = emptyList()
     )
 
-    private val _currentAddress = MutableStateFlow("")
-
-    val uiState = combine(
-        _currentBasket,
-        _currentAddress,
-    ) { orderList, currentAddress ->
+    val uiState = _currentBasket.map { basket ->
         UIState(
-            orderList = orderList,
-            address = currentAddress,
-            totalPrice = orderList.sumOf { it.quantity * it.price }.toPriceString()
+            orderList = basket,
+            totalPrice = basket.sumOf { it.quantity * it.price }.toPriceString()
         )
     }.stateIn(
         scope = viewModelScope,
@@ -39,6 +35,5 @@ class BasketScreenViewModel(
     data class UIState(
         val orderList: List<BasketItemEntity>,
         val totalPrice: String = "",
-        val address: String = ""
     )
 }

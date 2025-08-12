@@ -347,7 +347,6 @@ fun BasketScreenPreview() {
                     )
                 ),
                 totalPrice = "1,000",
-                address = "서우"
             )
         )
     }
