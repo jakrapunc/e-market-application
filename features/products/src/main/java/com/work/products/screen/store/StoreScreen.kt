@@ -237,7 +237,7 @@ fun StoreScreen(
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
-                        
+
                         Text(
                             text = uiState.error,
                             style = MaterialTheme.typography.headlineMedium,
@@ -351,7 +351,6 @@ fun StoreScreenPreview() {
     EMarketTheme {
         StoreScreen(
             uiState = StoreScreenViewModel.UIState(
-                error = "Loading Error"
             ),
             onEvent = {},
         )

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,8 @@ import com.work.base.compose.component.PrimaryButton
 import com.work.base.compose.theme.EMarketTheme
 import com.work.base.compose.theme.Green40
 import com.work.base.compose.theme.Green80
+import com.work.base.compose.theme.Red
+import com.work.base.compose.theme.Red80
 import com.work.base.compose.theme.White
 import org.koin.androidx.compose.koinViewModel
 
@@ -62,7 +65,10 @@ fun ConfirmOrderScreen(
         } else if (uiState.isSuccess) {
             ConfirmOrderScreenSuccess(onDone = onDone)
         } else if (uiState.error != null) {
-            ConfirmOrderScreenError()
+            ConfirmOrderScreenError(
+                errorMessage = uiState.error,
+                onDone = onDone
+            )
         }
     }
 }
@@ -87,8 +93,45 @@ fun ConfirmOrderScreenLoading() {
 }
 
 @Composable
-fun ConfirmOrderScreenError() {
-
+fun ConfirmOrderScreenError(
+    errorMessage: String,
+    onDone: () -> Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier.size(164.dp)
+                .background(
+                    color = Red,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(100.dp)
+                    .background(Red80, shape = CircleShape)
+                    .padding(24.dp),
+                imageVector = Icons.Filled.Warning,
+                contentDescription = "error",
+                tint = White
+            )
+        }
+        Spacer(modifier = Modifier.size(20.dp))
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.tertiary
+        )
+        Spacer(modifier = Modifier.size(100.dp))
+        PrimaryButton(
+            modifier = Modifier.width(250.dp)
+                .padding(horizontal = 20.dp),
+            text = "Done",
+            onClick = onDone
+        )
+    }
 }
 
 @Composable
@@ -145,7 +188,8 @@ fun ConfirmOrderScreenPreview() {
         ConfirmOrderScreen(
             uiState = ConfirmOrderScreenViewModel.UIState(
                 isLoading = false,
-                isSuccess = true
+                isSuccess = false,
+                error = "Loading Error"
             ),
             onDone = {}
         )
