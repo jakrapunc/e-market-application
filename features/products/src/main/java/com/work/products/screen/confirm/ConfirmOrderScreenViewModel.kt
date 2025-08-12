@@ -65,21 +65,23 @@ class ConfirmOrderScreenViewModel(
                 return@launch
             }
 
-            productRepository.createOrder(
-                orderBody = OrderBody(
-                    products = summaryProducts,
-                    deliveryAddress = address.value ?: "-"
-                )
-            ).catch {
-                _isLoading.value = false
-                _error.value = it.message
-                _isSuccess.value = false
-            }.collect {
-                _isLoading.value = false
-                _isSuccess.value = true
-                _error.value = null
+            try {
+                productRepository.createOrder(
+                    orderBody = OrderBody(
+                        products = summaryProducts,
+                        deliveryAddress = address.value ?: "-"
+                    )
+                ).collect {
+                    _isLoading.value = false
+                    _isSuccess.value = true
+                    _error.value = null
 
-                basketRepository.clearBasket()
+                    basketRepository.clearBasket()
+                }
+            } catch (e: Exception) {
+                _isLoading.value = false
+                _error.value = e.message
+                _isSuccess.value = false
             }
         }
     }

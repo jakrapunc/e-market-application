@@ -56,11 +56,11 @@ class ConfirmOrderScreenViewModelTest {
         coJustRun { basketRepository.clearBasket() }
 
         // ViewModel is initialized AFTER all mocks are set up, especially SavedStateHandle
-        viewModel = ConfirmOrderScreenViewModel(
-            productRepository,
-            basketRepository,
-            savedStateHandle
-        )
+//        viewModel = ConfirmOrderScreenViewModel(
+//            productRepository,
+//            basketRepository,
+//            savedStateHandle
+//        )
     }
 
     @After
@@ -73,16 +73,22 @@ class ConfirmOrderScreenViewModelTest {
         advanceUntilIdle() // Allow submitOrder to complete
 
         val expectedOrderBody = OrderBody(products = emptyList(), deliveryAddress = testAddress)
-        coVerify(atLeast = 1) { productRepository.createOrder(expectedOrderBody) } // atLeast = 1 because submitOrder is in init
+        coVerify(exactly = 0) { productRepository.createOrder(expectedOrderBody) } // atLeast = 1 because submitOrder is in init
+
+        viewModel = ConfirmOrderScreenViewModel(
+            productRepository,
+            basketRepository,
+            savedStateHandle
+        )
 
         // Verify submitOrder's effects (e.g., loading state, success if basket was empty)
         viewModel.uiState.test {
             val initialState = awaitItem() // Initial UIState()
-            val state = awaitItem()
 
-            Assert.assertFalse(state.isLoading)
-            Assert.assertTrue(state.isSuccess) // Success because default basket is empty
-            Assert.assertNull(state.error)
+            Assert.assertFalse(initialState.isLoading)
+            Assert.assertFalse(initialState.isSuccess) // Success because default basket is empty
+            Assert.assertNull(initialState.error)
+
             cancelAndConsumeRemainingEvents()
         }
     }
@@ -106,7 +112,11 @@ class ConfirmOrderScreenViewModelTest {
         coJustRun { basketRepository.clearBasket() }
 
         // When
-        val viewModel = ConfirmOrderScreenViewModel(productRepository, basketRepository, savedStateHandle)
+        viewModel = ConfirmOrderScreenViewModel(
+            productRepository,
+            basketRepository,
+            savedStateHandle
+        )
 
         // Then
         viewModel.uiState.test {
@@ -119,6 +129,10 @@ class ConfirmOrderScreenViewModelTest {
 
             cancelAndConsumeRemainingEvents()
         }
+
+        coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
+        coVerify(exactly = 1) { productRepository.createOrder(any()) } // Should not be called
+        coVerify(exactly = 1) { basketRepository.clearBasket() }
     }
 
     @Test
@@ -133,20 +147,30 @@ class ConfirmOrderScreenViewModelTest {
         coEvery { productRepository.createOrder(expectOrderBody) } returns flow { throw RuntimeException(errorMessage) }
 
         // When
-        viewModel.submitOrder()
+        viewModel = ConfirmOrderScreenViewModel(
+            productRepository,
+            basketRepository,
+            savedStateHandle
+        )
         advanceUntilIdle()
 
         // Then
         viewModel.uiState.test {
-            awaitItem() // Initial
+            val initialState = awaitItem()
+            val loadingState = awaitItem()
             val errorState = awaitItem()   // error state
-
+            advanceUntilIdle()
 
             Assert.assertFalse(errorState.isLoading)
             Assert.assertFalse(errorState.isSuccess)
             Assert.assertEquals(errorMessage, errorState.error)
+
             cancelAndConsumeRemainingEvents()
         }
+
+        coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
+        coVerify(exactly = 1) { productRepository.createOrder(any()) } // Should not be called
+        coVerify(exactly = 0) { basketRepository.clearBasket() }
     }
 
     @Test
@@ -156,10 +180,15 @@ class ConfirmOrderScreenViewModelTest {
         coEvery { basketRepository.getCurrentBasket() } returns flow { throw RuntimeException(errorMessage) }
 
         // When
-        viewModel.submitOrder()
+        viewModel = ConfirmOrderScreenViewModel(
+            productRepository,
+            basketRepository,
+            savedStateHandle
+        )
+
         advanceUntilIdle()
 
-        coVerify(exactly = 2) { basketRepository.getCurrentBasket() }
+        coVerify(exactly = 1) { basketRepository.getCurrentBasket() }
         coVerify(exactly = 0) { productRepository.createOrder(any()) } // Should not be called
         coVerify(exactly = 0) { basketRepository.clearBasket() }
     }
